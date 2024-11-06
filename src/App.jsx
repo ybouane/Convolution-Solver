@@ -59,7 +59,29 @@ const SliderValue = ({min, max, disabled, linkXY, value, onChange, roundNumber})
 	}
 }
 
+const solver = (equation=(a, b)=>2*a-b, possibleValues = [[0, 1], [2, 3]])=>{
+	const generateCombinations = (arrays, prefix = []) => {
+		if (arrays.length === 0) return [prefix];
+		const [firstArray, ...restArrays] = arrays;
+		const combinations = [];
+		if(Array.isArray(firstArray)) {
+			for (let value of firstArray)
+				combinations.push(...generateCombinations(restArrays, [...prefix, value]));
+		} else {
+			combinations.push(...generateCombinations(restArrays, [...prefix, firstArray]));
+		}
+		return combinations;
+	};
+	const combinations = generateCombinations(possibleValues);
+	for(let combo of combinations) {
+		if(equation(...combo) === 0)
+			return combo;
+	}
+	return false;
+}
+
 const ConvolutionSolver = ()=>{
+	
 	let [linkXY, setLinkXY] = useState(true);
 	let [input, setInput] = useState([256, 256]);
 	let [output, setOutput] = useState([128, 128]);
@@ -74,6 +96,8 @@ const ConvolutionSolver = ()=>{
 	let [transpose, setTranspose] = useState(false);
 		let [transposeSolve, setTransposeSolve] = useState(true);
 
+	let [solution, setSolution] = useState([output[0], output[1]]);
+
 	useEffect(()=>{
 		if(linkXY) { // force same values
 			setInput([input[0], input[0]]);
@@ -86,7 +110,74 @@ const ConvolutionSolver = ()=>{
 	}, [linkXY]);
 
 	useEffect(()=>{
+		// Equations from https://discuss.pytorch.org/t/how-to-keep-the-shape-of-input-and-output-same-when-dilation-conv/14338
+		let eq		= (i, o, k, p, d, s)=>(i + 2*p - k - (k-1)*(d-1))/s + 1 - o;
+		let eqTrans	= (i, o, k, p, d, s)=>(i -1)*s - 2*p + k - o;
+		
+		let possibleValues = [
+			input[0],
+			output[0],
+			kernelSolve?[kernel[0], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10]:kernel[0],
+			paddingSolve?[padding[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[0],
+			dilationSolve?[dilation[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[0],
+			strideSolve?[stride[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[0],
+		];
 
+		let solutionX = false;
+		let t = false;
+		if(!transpose || transposeSolve)
+			solutionX = solver(eq, possibleValues);
+		if(!solutionX && (transpose || transposeSolve)) {
+			solutionX = solver(eqTrans, possibleValues);
+			t = true;
+		}
+
+		let solutionY = solutionX;
+
+		if(linkXY) {
+			if(solutionX) {
+				setSolution([solutionX, solutionX]);
+				let [i, o, k, p, d, s] = solutionX;
+				setKernel([k ,k]);
+				setPadding([p, p]);
+				setDilation([d, d]);
+				setStride([s, s]);
+				setTranspose([t, t]);
+			} else {
+				setSolution(false);
+			}
+		} else {
+			let possibleValues = [
+				input[1],
+				output[1],
+				kernelSolve?[kernel[1], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10]:kernel[1],
+				paddingSolve?[padding[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[1],
+				dilationSolve?[dilation[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[1],
+				strideSolve?[stride[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[1],
+			];
+			let t_ = false;
+			if(!transpose || transposeSolve)
+				solutionY = solver(eq, possibleValues);
+			if(!solutionY && (transpose || transposeSolve)) {
+				solutionY = solver(eqTrans, possibleValues);
+				t_ = true;
+			}
+
+			if(solutionX && solutionY) {
+				setSolution([solutionX, solutionY]);
+				let [i, o, k, p, d, s] = solutionX;
+				let [i_, o_, k_, p_, d_, s_] = solutionY;
+				setKernel([k ,k_]);
+				setPadding([p, p_]);
+				setDilation([d, d_]);
+				setStride([s, s_]);
+				setTranspose([t, t_]);
+			} else {
+				setSolution(false);
+			}
+		}
+		
+		
 	}, [
 		input, output, kernel, padding, dilation, stride, transpose,
 		kernelSolve, paddingSolve, dilationSolve, strideSolve, transposeSolve
@@ -123,6 +214,7 @@ const ConvolutionSolver = ()=>{
 				<label>Stride<Checkbox checked={strideSolve} onChange={(v,c)=>setStrideSolve(c)}>Solve for</Checkbox></label>
 				<SliderValue min={1} max={16} disabled={strideSolve} linkXY={linkXY} value={stride} onChange={setStride} />
 			</form-field>
+			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<h2>No solution given the constraints.</h2>}
 		</form>
 	</>
 };
