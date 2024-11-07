@@ -133,8 +133,8 @@ const ConvolutionSolver = ()=>{
 	let possibleValues = [
 		input[0],
 		output[0],
-		kernelSolve?[kernel[0], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10]:kernel[0],
-		paddingSolve?[padding[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[0],
+		kernelSolve?[kernel[0], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10, 1]:kernel[0],
+		paddingSolve?[padding[0], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[0],
 		dilationSolve?[dilation[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[0],
 		strideSolve?[stride[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[0],
 	];
@@ -170,8 +170,8 @@ const ConvolutionSolver = ()=>{
 		let possibleValues = [
 			input[1],
 			output[1],
-			kernelSolve?[kernel[1], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10]:kernel[1],
-			paddingSolve?[padding[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[1],
+			kernelSolve?[kernel[1], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10, 1]:kernel[1],
+			paddingSolve?[padding[1], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[1],
 			dilationSolve?[dilation[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[1],
 			strideSolve?[stride[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[1],
 		];
@@ -224,7 +224,7 @@ const ConvolutionSolver = ()=>{
 			</h2>
 			<form-field>
 				<label>Kernel Size<Checkbox checked={kernelSolve} onChange={(v,c)=>setKernelSolve(c)}>Solve for</Checkbox></label>
-				<SliderValue min={1} max={11} disabled={kernelSolve} linkXY={linkXY} value={kernel} onChange={setKernel} roundNumber={(v)=>v%2==0?v+1:v} />
+				<SliderValue min={1} max={11} disabled={kernelSolve} linkXY={linkXY} value={kernel} onChange={setKernel} roundNumber={(v)=>(!transpose && v%2==0)?v+1:v} />
 			</form-field>
 			<form-field>
 				<label>Padding<Checkbox checked={paddingSolve} onChange={(v,c)=>setPaddingSolve(c)}>Solve for</Checkbox></label>
