@@ -96,8 +96,6 @@ const ConvolutionSolver = ()=>{
 	let [transpose, setTranspose] = useState(false);
 		let [transposeSolve, setTransposeSolve] = useState(true);
 
-	let [solution, setSolution] = useState([output[0], output[1]]);
-
 	useEffect(()=>{
 		if(linkXY) { // force same values
 			setInput([input[0], input[0]]);
@@ -109,79 +107,75 @@ const ConvolutionSolver = ()=>{
 		}
 	}, [linkXY]);
 
-	useEffect(()=>{
-		// Equations from https://discuss.pytorch.org/t/how-to-keep-the-shape-of-input-and-output-same-when-dilation-conv/14338
-		let eq		= (i, o, k, p, d, s)=>(i + 2*p - k - (k-1)*(d-1))/s + 1 - o;
-		let eqTrans	= (i, o, k, p, d, s)=>(i -1)*s - 2*p + k - o;
-		
-		let possibleValues = [
-			input[0],
-			output[0],
-			kernelSolve?[kernel[0], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10]:kernel[0],
-			paddingSolve?[padding[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[0],
-			dilationSolve?[dilation[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[0],
-			strideSolve?[stride[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[0],
-		];
+	let solution = false;
+	// Equations from https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html & https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
+	let eq		= (i, o, k, p, d, s)=>Math.floor((i + 2*p - k - (k-1)*(d-1))/s + 1) - o;
+	let eqTrans	= (i, o, k, p, d, s)=>(i -1)*s - 2*p + k - o;
+	
 
-		let solutionX = false;
-		let t = false;
-		if(!transpose || transposeSolve)
-			solutionX = solver(eq, possibleValues);
-		if(!solutionX && (transpose || transposeSolve)) {
-			solutionX = solver(eqTrans, possibleValues);
-			t = true;
-		}
 
-		let solutionY = solutionX;
+	let possibleValues = [
+		input[0],
+		output[0],
+		kernelSolve?[kernel[0], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10]:kernel[0],
+		paddingSolve?[padding[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[0],
+		dilationSolve?[dilation[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[0],
+		strideSolve?[stride[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[0],
+	];
 
-		if(linkXY) {
-			if(solutionX) {
-				setSolution([solutionX, solutionX]);
-				let [i, o, k, p, d, s] = solutionX;
-				setKernel([k ,k]);
-				setPadding([p, p]);
-				setDilation([d, d]);
-				setStride([s, s]);
-				setTranspose([t, t]);
-			} else {
-				setSolution(false);
-			}
+	let solutionX = false;
+	let t = false;
+	if(!transpose || transposeSolve)
+		solutionX = solver(eq, possibleValues);
+	if(!solutionX && (transpose || transposeSolve)) {
+		solutionX = solver(eqTrans, possibleValues);
+		t = true;
+	}
+
+	let solutionY = solutionX;
+
+	if(linkXY) {
+		if(solutionX) {
+			solution = [solutionX, solutionX];
+			let [i, o, k, p, d, s] = solutionX;
+			kernel = [k ,k];
+			padding = [p, p];
+			dilation = [d, d];
+			stride = [s, s];
+			transpose = [t, t];
 		} else {
-			let possibleValues = [
-				input[1],
-				output[1],
-				kernelSolve?[kernel[1], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10]:kernel[1],
-				paddingSolve?[padding[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[1],
-				dilationSolve?[dilation[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[1],
-				strideSolve?[stride[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[1],
-			];
-			let t_ = false;
-			if(!transpose || transposeSolve)
-				solutionY = solver(eq, possibleValues);
-			if(!solutionY && (transpose || transposeSolve)) {
-				solutionY = solver(eqTrans, possibleValues);
-				t_ = true;
-			}
-
-			if(solutionX && solutionY) {
-				setSolution([solutionX, solutionY]);
-				let [i, o, k, p, d, s] = solutionX;
-				let [i_, o_, k_, p_, d_, s_] = solutionY;
-				setKernel([k ,k_]);
-				setPadding([p, p_]);
-				setDilation([d, d_]);
-				setStride([s, s_]);
-				setTranspose([t, t_]);
-			} else {
-				setSolution(false);
-			}
+			solution = false;
 		}
-		
-		
-	}, [
-		input, output, kernel, padding, dilation, stride, transpose,
-		kernelSolve, paddingSolve, dilationSolve, strideSolve, transposeSolve
-	]);
+	} else {
+		let possibleValues = [
+			input[1],
+			output[1],
+			kernelSolve?[kernel[1], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10]:kernel[1],
+			paddingSolve?[padding[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[1],
+			dilationSolve?[dilation[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[1],
+			strideSolve?[stride[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[1],
+		];
+		let t_ = false;
+		if(!transpose || transposeSolve)
+			solutionY = solver(eq, possibleValues);
+		if(!solutionY && (transpose || transposeSolve)) {
+			solutionY = solver(eqTrans, possibleValues);
+			t_ = true;
+		}
+
+		if(solutionX && solutionY) {
+			solution = [solutionX, solutionY];
+			let [i, o, k, p, d, s] = solutionX;
+			let [i_, o_, k_, p_, d_, s_] = solutionY;
+			kernel = [k ,k_];
+			padding = [p, p_];
+			dilation = [d, d_];
+			stride = [s, s_];
+			transpose = [t, t_];
+		} else {
+			solution = false;
+		}
+	}
 	return <>
 		<form>
 			<form-field>
