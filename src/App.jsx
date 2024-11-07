@@ -62,17 +62,21 @@ const SliderValue = ({min, max, disabled, linkXY, value, onChange, roundNumber})
 }
 
 const solver = (equation=(a, b)=>2*a-b, possibleValues = [[0, 1], [2, 3]])=>{
-	const generateCombinations = (arrays, prefix = []) => {
-		if (arrays.length === 0) return [prefix];
-		const [firstArray, ...restArrays] = arrays;
-		const combinations = [];
-		if(Array.isArray(firstArray)) {
-			for (let value of firstArray)
-				combinations.push(...generateCombinations(restArrays, [...prefix, value]));
-		} else {
-			combinations.push(...generateCombinations(restArrays, [...prefix, firstArray]));
+	const generateCombinations = (arrays) => {
+		const results = [];
+		const counters = new Array(arrays.length).fill(0);
+		let done = false;
+		while (!done) {
+			const combination = counters.map((count, index) => arrays[index][count]);
+			results.push(combination);
+			for (let i = arrays.length - 1; i >= 0; i--) {
+				counters[i]++;
+				if (counters[i] < arrays[i].length) break;
+				counters[i] = 0;
+				if (i === 0) done = true;
+			}
 		}
-		return combinations;
+		return results;
 	};
 	const combinations = generateCombinations(possibleValues);
 	for(let combo of combinations) {
