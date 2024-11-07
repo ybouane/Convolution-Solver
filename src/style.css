@@ -39,12 +39,13 @@ form {
 	& form-field {
 		display:block;
 		& label {
+			display:block;
 			& .rs-checkbox {
 				font-size:0.8em;
 				user-select: none;
 			}
 		}
-		&:has(>.rs-toggle) {
+		&:has(>.rs-toggle:only-child) {
 			text-align: center;
 		}
 		& .rs-btn-group {

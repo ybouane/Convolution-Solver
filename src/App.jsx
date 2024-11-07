@@ -87,16 +87,24 @@ const ConvolutionSolver = ()=>{
 	let [linkXY, setLinkXY] = useState(true);
 	let [input, setInput] = useState([256, 256]);
 	let [output, setOutput] = useState([128, 128]);
+
 	let [kernel, setKernel] = useState([3, 3]);
-		let [kernelSolve, setKernelSolve] = useState(false);
+	let [kernelSolve, setKernelSolve] = useState(false);
+	
 	let [padding, setPadding] = useState([1, 1]);
-		let [paddingSolve, setPaddingSolve] = useState(true);
+	let [paddingSolve, setPaddingSolve] = useState(true);
+	
 	let [dilation, setDilation] = useState([1, 1]);
-		let [dilationSolve, setDilationSolve] = useState(true);
+	let [dilationSolve, setDilationSolve] = useState(true);
+	
 	let [stride, setStride] = useState([2, 2]);
-		let [strideSolve, setStrideSolve] = useState(true);
+	let [strideSolve, setStrideSolve] = useState(true);
+	
 	let [transpose, setTranspose] = useState(false);
-		let [transposeSolve, setTransposeSolve] = useState(true);
+	let [transposeSolve, setTransposeSolve] = useState(true);
+	
+	let [outputPadding, setOutputPadding] = useState([0, 0]);
+	let [outputPaddingSolve, setOutputPaddingSolve] = useState(true);
 		
 	let [forceCustom, setForceCustom] = useState(false);
 	useEffect(()=>{
@@ -107,13 +115,14 @@ const ConvolutionSolver = ()=>{
 			setPadding([padding[0], padding[0]]);
 			setDilation([dilation[0], dilation[0]]);
 			setStride([stride[0], stride[0]]);
+			setOutputPadding([outputPadding[0], outputPadding[0]]);
 		}
 	}, [linkXY]);
 
 	let solution = false;
 	// Equations from https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html & https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
 	let eq		= (i, o, k, p, d, s)=>Math.floor((i + 2*p - k - (k-1)*(d-1))/s + 1) - o;
-	let eqTrans	= (i, o, k, p, d, s)=>(i -1)*s - 2*p + k - o;
+	let eqTrans	= (i, o, k, p, d, s, po)=>(i -1)*s - 2*p + d*(k-1) + po + 1 - o;
 	
 
 
@@ -127,12 +136,15 @@ const ConvolutionSolver = ()=>{
 	];
 
 	let solutionX = false;
-	let t = false;
 	if(!transpose || transposeSolve)
 		solutionX = solver(eq, possibleValues);
 	if(!solutionX && (transpose || transposeSolve)) {
-		solutionX = solver(eqTrans, possibleValues);
-		t = true;
+		solutionX = solver(eqTrans, [
+			...possibleValues,
+			outputPaddingSolve?[outputPadding[0], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:outputPadding[0],
+		]);
+		if(solutionX)
+			transpose = true;
 	}
 
 	let solutionY = solutionX;
@@ -140,12 +152,13 @@ const ConvolutionSolver = ()=>{
 	if(linkXY) {
 		if(solutionX) {
 			solution = [solutionX, solutionX];
-			let [i, o, k, p, d, s] = solutionX;
+			let [i, o, k, p, d, s, po] = solutionX;
 			kernel = [k ,k];
 			padding = [p, p];
 			dilation = [d, d];
 			stride = [s, s];
-			transpose = [t, t];
+			if(transpose)
+				outputPadding = [po, po];
 		} else {
 			solution = false;
 		}
@@ -158,23 +171,24 @@ const ConvolutionSolver = ()=>{
 			dilationSolve?[dilation[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[1],
 			strideSolve?[stride[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[1],
 		];
-		let t_ = false;
-		if(!transpose || transposeSolve)
+		if(!transpose)
 			solutionY = solver(eq, possibleValues);
-		if(!solutionY && (transpose || transposeSolve)) {
-			solutionY = solver(eqTrans, possibleValues);
-			t_ = true;
-		}
+		else
+			solutionY = solver(eqTrans, [
+				...possibleValues,
+				outputPaddingSolve?[outputPadding[1], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:outputPadding[1],
+			]);
 
 		if(solutionX && solutionY) {
 			solution = [solutionX, solutionY];
-			let [i, o, k, p, d, s] = solutionX;
-			let [i_, o_, k_, p_, d_, s_] = solutionY;
+			let [i, o, k, p, d, s, po] = solutionX;
+			let [i_, o_, k_, p_, d_, s_, po_] = solutionY;
 			kernel = [k ,k_];
 			padding = [p, p_];
 			dilation = [d, d_];
 			stride = [s, s_];
-			transpose = [t, t_];
+			if(transpose)
+				outputPadding = [po, po_];
 		} else {
 			solution = false;
 		}
@@ -220,6 +234,14 @@ const ConvolutionSolver = ()=>{
 				<label>Stride<Checkbox checked={strideSolve} onChange={(v,c)=>setStrideSolve(c)}>Solve for</Checkbox></label>
 				<SliderValue min={1} max={16} disabled={strideSolve} linkXY={linkXY} value={stride} onChange={setStride} />
 			</form-field>
+			<form-field>
+				<label>Transposed Convolution<Checkbox checked={transposeSolve} onChange={(v,c)=>setTransposeSolve(c)}>Solve for</Checkbox></label>
+				<Toggle checked={transpose} disabled={transposeSolve} onChange={c=>setTranspose(c)}></Toggle>
+			</form-field>
+			{transpose && <form-field>
+				<label>Output Padding<Checkbox checked={outputPaddingSolve} onChange={(v,c)=>setOutputPaddingSolve(c)}>Solve for</Checkbox></label>
+				<SliderValue min={0} max={20} disabled={outputPaddingSolve} linkXY={linkXY} value={outputPadding} onChange={setOutputPadding} />
+			</form-field>}
 			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<h2>😭 No solution given the constraints.</h2>}
 		</form>
 	</>
