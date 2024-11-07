@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import 'rsuite/Slider/styles/index.css';
 import 'rsuite/InputNumber/styles/index.css';
 import 'rsuite/Button/styles/index.css';
+import 'rsuite/ButtonGroup/styles/index.css';
+import 'rsuite/ButtonToolbar/styles/index.css';
 import 'rsuite/Checkbox/styles/index.css';
 import 'rsuite/Toggle/styles/index.css';
-import { CustomProvider, Slider, InputNumber, Checkbox, Button, Toggle} from 'rsuite';
+import { CustomProvider, Slider, InputNumber, Checkbox, Button, ButtonGroup, ButtonToolbar, Toggle} from 'rsuite';
 
 function roundToPowerOf2(number, range=15) {
 	// Find the closest powers of 2
@@ -95,7 +97,8 @@ const ConvolutionSolver = ()=>{
 		let [strideSolve, setStrideSolve] = useState(true);
 	let [transpose, setTranspose] = useState(false);
 		let [transposeSolve, setTransposeSolve] = useState(true);
-
+		
+	let [forceCustom, setForceCustom] = useState(false);
 	useEffect(()=>{
 		if(linkXY) { // force same values
 			setInput([input[0], input[0]]);
@@ -187,7 +190,16 @@ const ConvolutionSolver = ()=>{
 			</form-field>
 			<form-field>
 				<label>Output Size</label>
-				<SliderValue min={3} max={1024} linkXY={linkXY} value={output} onChange={setOutput} roundNumber={roundToPowerOf2} />
+				<ButtonGroup>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**-3, input[1]*2**-3]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**-3 && output[1]/input[1]==2**-3}>÷ 8</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**-2, input[1]*2**-2]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**-2 && output[1]/input[1]==2**-2}>÷ 4</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**-1, input[1]*2**-1]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**-1 && output[1]/input[1]==2**-1}>÷ 2</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setForceCustom(true)}} active={forceCustom || !Number.isInteger(Math.log2(output[0]/input[0]))}>Custom</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**1, input[1]*2**1]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**1 && output[1]/input[1]==2**1}>× 2</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**2, input[1]*2**2]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**2 && output[1]/input[1]==2**2}>× 4</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**3, input[1]*2**3]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**3 && output[1]/input[1]==2**3}>× 8</Button>
+				</ButtonGroup>
+				{(forceCustom || !Number.isInteger(Math.log2(output[0]/input[0]))) && <SliderValue min={3} max={1024} linkXY={linkXY} value={output} onChange={setOutput} roundNumber={roundToPowerOf2} />}
 			</form-field>
 			<h2>
 				{input[0]}×{input[1]} → {output[0]}×{output[1]}
@@ -208,7 +220,7 @@ const ConvolutionSolver = ()=>{
 				<label>Stride<Checkbox checked={strideSolve} onChange={(v,c)=>setStrideSolve(c)}>Solve for</Checkbox></label>
 				<SliderValue min={1} max={16} disabled={strideSolve} linkXY={linkXY} value={stride} onChange={setStride} />
 			</form-field>
-			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<h2>No solution given the constraints.</h2>}
+			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<h2>😭 No solution given the constraints.</h2>}
 		</form>
 	</>
 };

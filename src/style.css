@@ -47,6 +47,10 @@ form {
 		&:has(>.rs-toggle) {
 			text-align: center;
 		}
+		& .rs-btn-group {
+			display:flex;
+			justify-content: center;
+		}
 	}
 	& h2 {
 		font-size: 1.5em;
