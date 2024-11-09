@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import 'rsuite/Slider/styles/index.css';
 import 'rsuite/InputNumber/styles/index.css';
 import 'rsuite/Button/styles/index.css';
@@ -61,24 +61,28 @@ const SliderValue = ({min, max, disabled, linkXY, value, onChange, roundNumber})
 	}
 }
 
-const solver = (equation=(a, b)=>2*a-b, possibleValues = [[0, 1], [2, 3]])=>{
-	const generateCombinations = (arrays) => {
+const solver = async (equation=(a, b)=>2*a-b, possibleValues = [[0, 1], [2, 3]])=>{
+	const generateCombinations = async (arrays) => {
+		arrays = arrays.map(a=>Array.isArray(a)?a:[a]);
 		const results = [];
 		const counters = new Array(arrays.length).fill(0);
 		let done = false;
+		let w=0;
 		while (!done) {
 			const combination = counters.map((count, index) => arrays[index][count]);
 			results.push(combination);
 			for (let i = arrays.length - 1; i >= 0; i--) {
 				counters[i]++;
 				if (counters[i] < arrays[i].length) break;
-				counters[i] = 0;
+					counters[i] = 0;
 				if (i === 0) done = true;
 			}
+			if(w%10_000)
+				await new Promise(r=>setTimeout(r, 0)); // Wait for 0sec to unblock main ui loop
 		}
 		return results;
 	};
-	const combinations = generateCombinations(possibleValues);
+	const combinations = await generateCombinations(possibleValues);
 	for(let combo of combinations) {
 		if(equation(...combo) === 0)
 			return combo;
@@ -109,8 +113,13 @@ const ConvolutionSolver = ()=>{
 	
 	let [outputPadding, setOutputPadding] = useState([0, 0]);
 	let [outputPaddingSolve, setOutputPaddingSolve] = useState(true);
-		
+	
 	let [forceCustom, setForceCustom] = useState(false);
+
+	let [solution, setSolution] = useState([output[0], output[1]]);
+
+	let internalChange = useRef(false);
+	let solveCounter = useRef(0);
 	useEffect(()=>{
 		if(linkXY) { // force same values
 			setInput([input[0], input[0]]);
@@ -120,83 +129,108 @@ const ConvolutionSolver = ()=>{
 			setDilation([dilation[0], dilation[0]]);
 			setStride([stride[0], stride[0]]);
 			setOutputPadding([outputPadding[0], outputPadding[0]]);
+			setSolution([solution[0], solution[0]]);
 		}
 	}, [linkXY]);
 
-	let solution = false;
 	// Equations from https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html & https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
 	let eq		= (i, o, k, p, d, s)=>Math.floor((i + 2*p - k - (k-1)*(d-1))/s + 1) - o;
 	let eqTrans	= (i, o, k, p, d, s, po)=>(i -1)*s - 2*p + d*(k-1) + po + 1 - o;
 	
 
-
-	let possibleValues = [
-		input[0],
-		output[0],
-		kernelSolve?[kernel[0], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10, 1]:kernel[0],
-		paddingSolve?[padding[0], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[0],
-		dilationSolve?[dilation[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[0],
-		strideSolve?[stride[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[0],
-	];
-
-	let solutionX = false;
-	if(!transpose || transposeSolve)
-		solutionX = solver(eq, possibleValues);
-	if(!solutionX && (transpose || transposeSolve)) {
-		solutionX = solver(eqTrans, [
-			...possibleValues,
-			outputPaddingSolve?[outputPadding[0], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:outputPadding[0],
-		]);
-		if(solutionX)
-			transpose = true;
-	}
-
-	let solutionY = solutionX;
-
-	if(linkXY) {
-		if(solutionX) {
-			solution = [solutionX, solutionX];
-			let [i, o, k, p, d, s, po] = solutionX;
-			kernel = [k ,k];
-			padding = [p, p];
-			dilation = [d, d];
-			stride = [s, s];
-			if(transpose)
-				outputPadding = [po, po];
-		} else {
-			solution = false;
+	useEffect(()=>{
+		if(internalChange.current) {
+			internalChange.current = false;
+			return;
 		}
-	} else {
-		let possibleValues = [
-			input[1],
-			output[1],
-			kernelSolve?[kernel[1], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10, 1]:kernel[1],
-			paddingSolve?[padding[1], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[1],
-			dilationSolve?[dilation[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[1],
-			strideSolve?[stride[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[1],
-		];
-		if(!transpose)
-			solutionY = solver(eq, possibleValues);
-		else
-			solutionY = solver(eqTrans, [
-				...possibleValues,
-				outputPaddingSolve?[outputPadding[1], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:outputPadding[1],
-			]);
+		let timer = setTimeout(async () => {
+			internalChange.current = true;
+			solveCounter.current++;
+			let count = solveCounter.current;
+			let possibleValues = [
+				input[0],
+				output[0],
+				kernelSolve?[kernel[0], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10, 1]:kernel[0],
+				paddingSolve?[padding[0], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[0],
+				dilationSolve?[dilation[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[0],
+				strideSolve?[stride[0], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[0],
+			];
 
-		if(solutionX && solutionY) {
-			solution = [solutionX, solutionY];
-			let [i, o, k, p, d, s, po] = solutionX;
-			let [i_, o_, k_, p_, d_, s_, po_] = solutionY;
-			kernel = [k ,k_];
-			padding = [p, p_];
-			dilation = [d, d_];
-			stride = [s, s_];
-			if(transpose)
-				outputPadding = [po, po_];
-		} else {
-			solution = false;
-		}
-	}
+			let solutionX = false;
+			if(!transpose || transposeSolve) {
+				solutionX = await solver(eq, possibleValues);
+				transpose = false;
+			}
+			if(!solutionX && (transpose || transposeSolve)) {
+				solutionX = await solver(eqTrans, [
+					...possibleValues,
+					outputPaddingSolve?[outputPadding[0], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:outputPadding[0],
+				]);
+				if(solutionX)
+					transpose = true;
+			}
+			if(count!=solveCounter.current)
+				return;
+
+			let solutionY = solutionX;
+			
+			if(linkXY) {
+				if(solutionX) {
+					let [i, o, k, p, d, s, po] = solutionX;
+					setSolution(true);//[solutionX, solutionX]);
+					setKernel([k ,k]);
+					setPadding([p, p]);
+					setDilation([d, d]);
+					setStride([s, s]);
+					setTranspose(transpose);
+					if(transpose)
+						setOutputPadding([po, po]);
+				} else {
+					setSolution(false);
+				}
+			} else if(solutionX) {
+				let possibleValues = [
+					input[1],
+					output[1],
+					kernelSolve?[kernel[1], 3, 5, 7, 9, 11, 2, 4, 6, 8, 10, 1]:kernel[1],
+					paddingSolve?[padding[1], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:padding[1],
+					dilationSolve?[dilation[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:dilation[1],
+					strideSolve?[stride[1], 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:stride[1],
+				];
+				if(!transpose)
+					solutionY = await solver(eq, possibleValues);
+				else {
+					solutionY = await solver(eqTrans, [
+						...possibleValues,
+						outputPaddingSolve?[outputPadding[1], 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:outputPadding[1],
+					]);
+					if(solutionY)
+						transpose = true;
+				}
+
+				if(count!=solveCounter.current)
+					return;
+				if(solutionX && solutionY) {
+					setSolution(true);//[solutionX, solutionY]);
+					let [i, o, k, p, d, s, po] = solutionX;
+					let [i_, o_, k_, p_, d_, s_, po_] = solutionY;
+					setKernel([k ,k_]);
+					setPadding([p, p_]);
+					setDilation([d, d_]);
+					setStride([s, s_]);
+					setTranspose(transpose);
+					if(transpose)
+						setOutputPadding([po, po_]);
+				} else {
+					setSolution(false);
+				}
+			}
+		}, 100);
+		return ()=>clearTimeout(timer);
+	}, [
+		linkXY, input, output, kernel, padding, dilation, stride, transpose, outputPadding,
+		kernelSolve, paddingSolve, dilationSolve, strideSolve, transposeSolve, outputPaddingSolve
+	]);
 	return <>
 		<form>
 			<form-field>
