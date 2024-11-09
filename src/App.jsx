@@ -118,6 +118,9 @@ const ConvolutionSolver = ()=>{
 
 	let [solution, setSolution] = useState([output[0], output[1]]);
 
+	let [inChannels, setInChannels] = useState(3);
+	let [outChannels, setOutChannels] = useState(32);
+
 	let internalChange = useRef(false);
 	let solveCounter = useRef(0);
 	useEffect(()=>{
@@ -233,6 +236,18 @@ const ConvolutionSolver = ()=>{
 		linkXY, input, output, kernel, padding, dilation, stride, transpose, outputPadding,
 		kernelSolve, paddingSolve, dilationSolve, strideSolve, transposeSolve, outputPaddingSolve
 	]);
+
+	let codes;
+	if(solution) {
+		if(linkXY) {
+			codes = {
+				'PyTorch'				: `nn.Conv2d(in_channels=${inChannels}, out_channels=${outChannels}, kernel_size=${kernel}, stride=${stride}, padding=${padding}, dilation=${dilation})`,
+				'Keras / TensorFlow'	: (padding[0]!=0?`keras.layers.ZeroPadding2D(padding=${padding}),\n`:'')+`keras.layers.Conv2D(filters=${outChannels}, kernel_size=${kernel}, strides=${stride}, padding='valid', dilation_rate=${dilation}, input_shape=(${input[0]}, ${input[1]}, ${inChannels}))`,
+			}
+		} else {
+
+		}
+	}
 	return <>
 		<form>
 			<form-field>
@@ -283,6 +298,23 @@ const ConvolutionSolver = ()=>{
 				<SliderValue min={0} max={20} disabled={outputPaddingSolve} linkXY={linkXY} value={outputPadding} onChange={setOutputPadding} />
 			</form-field>}
 			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<h2>😭 No solution given the constraints.</h2>}
+			{solution?<div className="code-results">
+				<h2>Code snippets</h2>
+				<div data-horizontal>
+					<form-field>
+						<label>Input Channels</label>
+						<SliderValue min={1} max={512} linkXY={true} value={[inChannels, inChannels]} onChange={v=>setInChannels(v[0])} roundNumber={roundToPowerOf2} />
+					</form-field>
+					<form-field>
+						<label>Output Channels</label>
+						<SliderValue min={1} max={512} linkXY={true} value={[outChannels, outChannels]} onChange={v=>setOutChannels(v[0])} roundNumber={roundToPowerOf2} />
+					</form-field>
+				</div>
+				{Object.entries(codes).map(([k, v])=><div key={k}>
+					<h3>{k}</h3>
+					<code>{v}</code>
+				</div>)}
+			</div>:undefined}
 		</form>
 	</>
 };

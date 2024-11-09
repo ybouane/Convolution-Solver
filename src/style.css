@@ -51,6 +51,7 @@ form {
 		& .rs-btn-group {
 			display:flex;
 			justify-content: center;
+			margin-bottom:5px;
 		}
 	}
 	& h2 {
@@ -88,5 +89,34 @@ slider-dual {
     gap: 12px;
 	&>span {
 		font-size: 1.4em;
+	}
+}
+
+
+.code-results {
+	background-color: #00000044;
+	border-radius: 4px;
+	padding:8px 16px;
+	& > h2 {
+		padding-top:0px;
+	}
+	& [data-horizontal] {
+		display:flex;
+		flex-flow:row nowrap;
+		align-items:start;
+		justify-content:stretch;
+		gap:8px;
+		&>form-field {
+			width:0px;
+			flex:1 1 0;
+		}
+	}
+	& code {
+		display:block;
+		border-left: 2px solid #FFFFFF66;
+		padding:10px;
+		user-select: all;
+		white-space: pre-wrap;
+		margin-bottom: 12px;
 	}
 }
