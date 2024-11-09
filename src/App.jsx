@@ -224,6 +224,8 @@ const ConvolutionSolver = ()=>{
 				} else {
 					setSolution(false);
 				}
+			} else {
+				setSolution(false);
 			}
 		}, 100);
 		return ()=>clearTimeout(timer);
