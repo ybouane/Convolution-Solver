@@ -237,15 +237,18 @@ const ConvolutionSolver = ()=>{
 		kernelSolve, paddingSolve, dilationSolve, strideSolve, transposeSolve, outputPaddingSolve
 	]);
 
-	let codes;
+	let codes = {};
 	if(solution) {
 		if(linkXY) {
 			codes = {
-				'PyTorch'				: `nn.Conv2d(in_channels=${inChannels}, out_channels=${outChannels}, kernel_size=${kernel}, stride=${stride}, padding=${padding}, dilation=${dilation})`,
-				'Keras / TensorFlow'	: (padding[0]!=0?`keras.layers.ZeroPadding2D(padding=${padding}),\n`:'')+`keras.layers.Conv2D(filters=${outChannels}, kernel_size=${kernel}, strides=${stride}, padding='valid', dilation_rate=${dilation}, input_shape=(${input[0]}, ${input[1]}, ${inChannels}))`,
+				'PyTorch'				: `nn.Conv2d(in_channels=${inChannels}, out_channels=${outChannels}, kernel_size=${kernel[0]}, stride=${stride[0]}, padding=${padding[0]}, dilation=${dilation[0]})`,
+				'Keras / TensorFlow'	: (padding[0]!=0?`keras.layers.ZeroPadding2D(padding=${padding[0]}),\n`:'')+`keras.layers.Conv2D(filters=${outChannels}, kernel_size=${kernel[0]}, strides=${stride[0]}, padding='valid', dilation_rate=${dilation[0]}, input_shape=(${input[0]}, ${input[1]}, ${inChannels}))`,
 			}
 		} else {
-
+			codes = {
+				'PyTorch'				: `nn.Conv2d(in_channels=${inChannels}, out_channels=${outChannels}, kernel_size=(${kernel.join(', ')}), stride=(${stride.join(', ')}), padding=(${padding.join(', ')}), dilation=(${dilation.join(', ')}))`,
+				'Keras / TensorFlow'	: (padding[0]!=0?`keras.layers.ZeroPadding2D(padding=(${padding.join(', ')})),\n`:'')+`keras.layers.Conv2D(filters=${outChannels}, kernel_size=(${kernel.join(', ')}), strides=(${stride.join(', ')}), padding='valid', dilation_rate=(${dilation.join(', ')}), input_shape=(${input[0]}, ${input[1]}, ${inChannels}))`,
+			}
 		}
 	}
 	return <>
