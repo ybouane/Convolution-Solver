@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 
 import { Checkbox, Button, ButtonGroup, ButtonToolbar, Toggle} from 'rsuite';
 
-import {roundToPowerOf2, solver} from './helpers.js'
-import SliderValue from './sliderValue.jsx'
+import {roundToPowerOf2, solver, eq, eqTrans} from './helpers.js'
+import SliderValue from './sliderValue.jsx';
+import ConvolutionViewer from './convolutionViewer.jsx';
 
 const ConvolutionSolver = ()=>{
 	
@@ -50,10 +51,6 @@ const ConvolutionSolver = ()=>{
 			setSolution([solution[0], solution[0]]);
 		}
 	}, [linkXY]);
-
-	// Equations from https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html & https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
-	let eq		= (i, o, k, p, d, s)=>Math.floor((i + 2*p - k - (k-1)*(d-1))/s + 1) - o;
-	let eqTrans	= (i, o, k, p, d, s, po)=>(i -1)*s - 2*p + d*(k-1) + po + 1 - o;
 	
 
 	useEffect(()=>{
@@ -234,6 +231,7 @@ const ConvolutionSolver = ()=>{
 				</div>)}
 			</div>:undefined}
 		</form>
+		<ConvolutionViewer {...{input, kernel, padding, dilation, stride, transpose, outputPadding}} />
 	</>
 };
 

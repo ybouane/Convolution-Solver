@@ -1,3 +1,8 @@
+
+// Equations from https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html & https://pytorch.org/docs/stable/generated/torch.nn.ConvTranspose2d.html
+export let eq		= (i, o, k, p, d, s)=>Math.floor((i + 2*p - k - (k-1)*(d-1))/s + 1) - o;
+export let eqTrans	= (i, o, k, p, d, s, po)=>(i -1)*s - 2*p + d*(k-1) + po + 1 - o;
+
 export function roundToPowerOf2(number, range=15) {
 	// Find the closest powers of 2
 	const lowerPower = Math.pow(2, Math.floor(Math.log2(number)));
