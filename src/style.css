@@ -139,7 +139,7 @@ body.rs-theme-dark {
 			aspect-ratio: 1;
 			border:1px solid #00000011;
 			background:#FFFFFF;
-			&[data-padding] {
+			&.padding {
 				background:#DDDDDD;
 			}
 		}

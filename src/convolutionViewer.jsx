@@ -26,7 +26,7 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 		let grid = [];
 		for(let i=0;i<(input[1] + padding[1]*2);i++)
 			for(let j=0;j<(input[0] + padding[0]*2);j++)
-				if(i<padding[1] || i>=input[1]-padding[1] || j<padding[0] || j>=input[0]-padding[0]) {
+				if(i<padding[1] || i>=input[1]+padding[1] || j<padding[0] || j>=input[0]+padding[0]) {
 					grid.push(<div className="padding"></div>);
 				} else {
 					grid.push(<div></div>);
