@@ -121,3 +121,12 @@ slider-dual {
 		margin-bottom: 12px;
 	}
 }
+
+body.rs-theme-dark {
+	--rs-primary-200: #5cb2d1;
+	--rs-primary-400: #48a8cb;
+	--rs-primary-500: #379ec3;
+	--rs-primary-600: #318eaf;
+	--rs-primary-700: #2b7d9a;
+	--rs-primary-900: #266d87;
+}
