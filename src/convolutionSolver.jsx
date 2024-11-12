@@ -178,13 +178,13 @@ const ConvolutionSolver = ()=>{
 			<form-field>
 				<label>Output Size</label>
 				<ButtonGroup>
-					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**-3, input[1]*2**-3]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**-3 && output[1]/input[1]==2**-3}>÷ 8</Button>
-					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**-2, input[1]*2**-2]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**-2 && output[1]/input[1]==2**-2}>÷ 4</Button>
-					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**-1, input[1]*2**-1]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**-1 && output[1]/input[1]==2**-1}>÷ 2</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([Math.round(input[0]*2**-3), Math.round(input[1]*2**-3)]);setForceCustom(false);}} active={!forceCustom && output[0]==Math.round(input[0]*2**-3) && output[1]==Math.round(input[1]*2**-3)}>÷ 8</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([Math.round(input[0]*2**-2), Math.round(input[1]*2**-2)]);setForceCustom(false);}} active={!forceCustom && output[0]==Math.round(input[0]*2**-2) && output[1]==Math.round(input[1]*2**-2)}>÷ 4</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([Math.round(input[0]*2**-1), Math.round(input[1]*2**-1)]);setForceCustom(false);}} active={!forceCustom && output[0]==Math.round(input[0]*2**-1) && output[1]==Math.round(input[1]*2**-1)}>÷ 2</Button>
 					<Button size="sm" appearance="primary" onClick={()=>{setForceCustom(true)}} active={forceCustom || !Number.isInteger(Math.log2(output[0]/input[0]))}>Custom</Button>
-					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**1, input[1]*2**1]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**1 && output[1]/input[1]==2**1}>× 2</Button>
-					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**2, input[1]*2**2]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**2 && output[1]/input[1]==2**2}>× 4</Button>
-					<Button size="sm" appearance="primary" onClick={()=>{setOutput([input[0]*2**3, input[1]*2**3]);setForceCustom(false);}} active={!forceCustom && output[0]/input[0]==2**3 && output[1]/input[1]==2**3}>× 8</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([Math.round(input[0]*2**1), Math.round(input[1]*2**1)]);setForceCustom(false);}} active={!forceCustom && output[0]==Math.round(input[0]*2**1) && output[1]==Math.round(input[1]*2**1)}>× 2</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([Math.round(input[0]*2**2), Math.round(input[1]*2**2)]);setForceCustom(false);}} active={!forceCustom && output[0]==Math.round(input[0]*2**2) && output[1]==Math.round(input[1]*2**2)}>× 4</Button>
+					<Button size="sm" appearance="primary" onClick={()=>{setOutput([Math.round(input[0]*2**3), Math.round(input[1]*2**3)]);setForceCustom(false);}} active={!forceCustom && output[0]==Math.round(input[0]*2**3) && output[1]==Math.round(input[1]*2**3)}>× 8</Button>
 				</ButtonGroup>
 				{(forceCustom || !Number.isInteger(Math.log2(output[0]/input[0]))) && <SliderValue min={3} max={1024} linkXY={linkXY} value={output} onChange={setOutput} roundNumber={roundToPowerOf2} />}
 			</form-field>
