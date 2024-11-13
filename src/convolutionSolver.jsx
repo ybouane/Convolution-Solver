@@ -9,8 +9,8 @@ import ConvolutionViewer from './convolutionViewer.jsx';
 const ConvolutionSolver = ()=>{
 	
 	let [linkXY, setLinkXY] = useState(true);
-	let [input, setInput] = useState([256, 256]);
-	let [output, setOutput] = useState([128, 128]);
+	let [input, setInput] = useState([16, 16]);
+	let [output, setOutput] = useState([8, 8]);
 
 	let [kernel, setKernel] = useState([3, 3]);
 	let [kernelSolve, setKernelSolve] = useState(false);
@@ -170,7 +170,7 @@ const ConvolutionSolver = ()=>{
 			</form-field>
 			<form-field>
 				<label>Input Size</label>
-				<SliderValue min={3} max={1024} linkXY={linkXY} value={input} onChange={setInput} roundNumber={roundToPowerOf2} />
+				<SliderValue min={3} max={512} linkXY={linkXY} value={input} onChange={setInput} roundNumber={roundToPowerOf2} />
 			</form-field>
 			<form-field>
 				<label>Output Size</label>
@@ -183,7 +183,7 @@ const ConvolutionSolver = ()=>{
 					<Button size="sm" appearance="primary" onClick={()=>{setOutput([Math.round(input[0]*2**2), Math.round(input[1]*2**2)]);setForceCustom(false);}} active={!forceCustom && output[0]==Math.round(input[0]*2**2) && output[1]==Math.round(input[1]*2**2)}>× 4</Button>
 					<Button size="sm" appearance="primary" onClick={()=>{setOutput([Math.round(input[0]*2**3), Math.round(input[1]*2**3)]);setForceCustom(false);}} active={!forceCustom && output[0]==Math.round(input[0]*2**3) && output[1]==Math.round(input[1]*2**3)}>× 8</Button>
 				</ButtonGroup>
-				{(forceCustom || !Number.isInteger(Math.log2(output[0]/input[0]))) && <SliderValue min={3} max={1024} linkXY={linkXY} value={output} onChange={setOutput} roundNumber={roundToPowerOf2} />}
+				{(forceCustom || !Number.isInteger(Math.log2(output[0]/input[0]))) && <SliderValue min={3} max={512} linkXY={linkXY} value={output} onChange={setOutput} roundNumber={roundToPowerOf2} />}
 			</form-field>
 			<h2>
 				{input[0]}×{input[1]} → {output[0]}×{output[1]}

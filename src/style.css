@@ -132,16 +132,7 @@ body.rs-theme-dark {
 }
 
 #visualizer {
-	& .grid {
-		display:grid;
-		grid-template-columns: repeat(var(--grid-columns), auto);
-		& >div {
-			aspect-ratio: 1;
-			border:1px solid #00000011;
-			background:#FFFFFF;
-			&.padding {
-				background:#DDDDDD;
-			}
-		}
+	canvas {
+		max-width: 100%;
 	}
 }
