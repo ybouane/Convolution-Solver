@@ -101,22 +101,18 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 		doHover = hoverOutput;
 	} else if(hoverInput) {
 		doHover = [
-			Math.min(output[0]-1, Math.max(0, Math.ceil((hoverInput[0] - padding[0]) / stride[0]))),
-			Math.min(output[1]-1, Math.max(0, Math.ceil((hoverInput[1] - padding[1]) / stride[1]))),
+			Math.min(output[0]-1, Math.max(0, Math.floor((hoverInput[0] -  dilation[0] * Math.floor(kernel[0] / 2) + padding[0]) / stride[0]))),
+			Math.min(output[1]-1, Math.max(0, Math.floor((hoverInput[1] -  dilation[1] * Math.floor(kernel[1] / 2) + padding[1]) / stride[1]))),
 		]
 	}
 
 	let highlightCellsInput = useMemo(()=>{
 		let out = [];
-		let cK = [
-			Math.floor(kernel[0] / 2),
-			Math.floor(kernel[1] / 2),
-		];
 		for(let i=0;i<kernel[0];i++) {
 			for(let j=0;j<kernel[1];j++) {
 				out.push([
-					doHover[0] * stride[0] + (i - cK[0]) * dilation[0] + padding[0],
-					doHover[1] * stride[1] + (j - cK[1]) * dilation[1] + padding[1],
+					doHover[0] * stride[0] + i * dilation[0] + 0*padding[0],
+					doHover[1] * stride[1] + j * dilation[1] + 0*padding[1],
 				]);
 			}
 		}
