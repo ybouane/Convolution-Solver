@@ -163,6 +163,13 @@ const ConvolutionSolver = ()=>{
 			}
 		}
 	}
+	let realOutput = transpose?[
+		eqTrans(input[0], 0, kernel[0], padding[0], dilation[0], stride[0], outputPadding[0]),
+		eqTrans(input[1], 0, kernel[1], padding[1], dilation[1], stride[1], outputPadding[1]),
+	]:[
+		eq(input[0], 0, kernel[0], padding[0], dilation[0], stride[0]),
+		eq(input[1], 0, kernel[1], padding[1], dilation[1], stride[1]),
+	]
 	return <>
 		<form>
 			<form-field>
@@ -212,7 +219,10 @@ const ConvolutionSolver = ()=>{
 				<label>Output Padding<Checkbox checked={outputPaddingSolve} onChange={(v,c)=>setOutputPaddingSolve(c)}>Solve for</Checkbox></label>
 				<SliderValue min={0} max={20} disabled={outputPaddingSolve} linkXY={linkXY} value={outputPadding} onChange={setOutputPadding} />
 			</form-field>}
-			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<h2>😭 No solution given the constraints.</h2>}
+			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<>
+				<h2>😭 No solution given the constraints.</h2>
+				<h2>Current parameters give:<br />{input[0]}×{input[1]} → {realOutput[0]}×{realOutput[1]}</h2>
+			</>}
 			{solution?<div className="code-results">
 				<h2>Code snippets</h2>
 				<div data-horizontal>

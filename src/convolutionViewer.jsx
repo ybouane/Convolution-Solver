@@ -45,7 +45,7 @@ const Canvas = ({size, padding, highlightCells, onHover})=>{
 		for (let i = 0; i < hP; i++) {
 			for (let j = 0; j < wP; j++) {
 				let isPadding = j<padding[0] || j>=(w + padding[0]) || i<padding[1] || i>=(h + padding[1]);
-				let isHighlighted = highlightCells.find(c=>c[0]==i && c[1]==j);
+				let isHighlighted = highlightCells.find(c=>c[0]==j && c[1]==i);
 				if(isPadding)
 					ctx.current.fillStyle = isHighlighted?'#2b5d7e':'#1b2327';
 				else
@@ -59,7 +59,7 @@ const Canvas = ({size, padding, highlightCells, onHover})=>{
 				ctx.current.strokeRect(x+0.5, y+0.5, cellSize+1-0.5, cellSize+1-0.5);
 			}
 		}
-	}, [...size, ...padding, ...highlightCells]);
+	}, [...size, ...padding, highlightCells]);
 	return <canvas ref={$canvas} onMouseMove={(e)=>{
 		let x = Math.min(wP-1, Math.floor(wP * e.nativeEvent.offsetX / $canvas.current.clientWidth)) - padding[0];
 		let y = Math.min(hP-1, Math.floor(hP * e.nativeEvent.offsetY / $canvas.current.clientHeight)) - padding[1];
@@ -82,7 +82,7 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 				eq(input[1], 0, kernel[1], padding[1], dilation[1], stride[1]),
 			];
 		}
-	}, [...input, ...kernel, ...padding, ...dilation, ...stride, ...outputPadding, transpose])
+	}, [...input, ...kernel, ...padding, ...dilation, ...stride, outputPadding, transpose])
 
 	let [i, setI] = useState(0);
 	useEffect(()=>{
@@ -94,9 +94,17 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 	let [hoverOutput, setHoverOuput] = useState(false);
 
 	let doHover = [
+		output[0] * ((i % (output[0] * output[1]) / output[0]) % 1),
 		Math.floor(i % (output[0] * output[1]) / output[0]),
-		output[0] * ((i % (output[0] * output[1]) / output[0]) % 1)
 	];
+	if(hoverOutput) {
+		doHover = hoverOutput;
+	} else if(hoverInput) {
+		doHover = [
+			Math.min(output[0]-1, Math.max(0, Math.ceil((hoverInput[0] - padding[0]) / stride[0]))),
+			Math.min(output[1]-1, Math.max(0, Math.ceil((hoverInput[1] - padding[1]) / stride[1]))),
+		]
+	}
 
 	let highlightCellsInput = useMemo(()=>{
 		let out = [];
@@ -113,43 +121,17 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 			}
 		}
 		return out;
-	}, [...doHover]);
+	}, [doHover]);
 	let highlightCellsOutput = useMemo(()=>{
 		let out = [[...doHover]];
 		return out;
-		/*
-		let cK = [
-			Math.floor(kernel[0] / 2),
-			Math.floor(kernel[1] / 2),
-		];
-		for(let i=0;i<kernel[0];i++) {
-			for(let j=0;j<kernel[1];j++) {
-				out.push([
-					doHover[0] * stride[0] + (i - cK[0]) * dilation[0],
-					doHover[1] * stride[1] + (j - cK[1]) * dilation[1],
-				]);
-			}
-		}
-		return out;*/
-	}, [...doHover]);
+	}, [doHover]);
 
 	return <div id="visualizer">
-		<h2>Input</h2>
-		<Canvas {...{size: input, padding, highlightCells: highlightCellsInput}} onHover={(value)=>{
-			if(value) {
-				let [x, y] = value;
-			} else {
-
-			}
-		}} />
-		<h2>Output</h2>
-		<Canvas {...{size: output, padding: outputPadding, highlightCells: highlightCellsOutput}} onHover={(value)=>{
-			if(value) {
-				let [x, y] = value;
-			} else {
-
-			}
-		}} />
+		<h2>Input ({input[0]}×{input[1]})</h2>
+		<Canvas {...{size: input, padding, highlightCells: highlightCellsInput}} onHover={setHoverInput} />
+		<h2>Output ({output[0]}×{output[1]})</h2>
+		<Canvas {...{size: output, padding: outputPadding, highlightCells: highlightCellsOutput}} onHover={setHoverOuput} />
 	</div>
 };
 
