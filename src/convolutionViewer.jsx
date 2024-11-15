@@ -4,7 +4,7 @@ import {eq, eqTrans} from './helpers.js'
 const cellSizeMax = 30;
 //const cellSizeMin = 4;
 
-const Canvas = ({size, padding, highlightCells, onHover})=>{
+const Canvas = ({size, padding=[0, 0], outputPadding=[0, 0], highlightCells, onHover})=>{
 	let $canvas = useRef(null);
 	let ctx = useRef(null);
 	useEffect(()=>{
@@ -44,7 +44,7 @@ const Canvas = ({size, padding, highlightCells, onHover})=>{
 		// Draw grid
 		for (let i = 0; i < hP; i++) {
 			for (let j = 0; j < wP; j++) {
-				let isPadding = j<padding[0] || j>=(w + padding[0]) || i<padding[1] || i>=(h + padding[1]);
+				let isPadding = j<padding[0] || j>=(w - outputPadding[0] + padding[0]) || i<padding[1] || i>=(h - outputPadding[1]  + padding[1]);
 				let isHighlighted = highlightCells.find(c=>c[0]==j && c[1]==i);
 				if(isPadding)
 					ctx.current.fillStyle = isHighlighted?'#2b5d7e':'#1b2327';
@@ -61,8 +61,8 @@ const Canvas = ({size, padding, highlightCells, onHover})=>{
 		}
 	}, [...size, ...padding, highlightCells]);
 	return <canvas ref={$canvas} onMouseMove={(e)=>{
-		let x = Math.min(wP-1, Math.floor(wP * e.nativeEvent.offsetX / $canvas.current.clientWidth)) - padding[0];
-		let y = Math.min(hP-1, Math.floor(hP * e.nativeEvent.offsetY / $canvas.current.clientHeight)) - padding[1];
+		let x = Math.min(wP-1, Math.floor(wP * e.nativeEvent.offsetX / $canvas.current.clientWidth));
+		let y = Math.min(hP-1, Math.floor(hP * e.nativeEvent.offsetY / $canvas.current.clientHeight));
 		onHover && onHover([x, y]);
 	}} onMouseLeave={()=>{
 		onHover && onHover(false);
@@ -91,18 +91,36 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 	}, []);
 
 	let [hoverInput, setHoverInput] = useState(false);
-	let [hoverOutput, setHoverOuput] = useState(false);
+	let [hoverOutput, setHoverOutput] = useState(false);
 
-	let doHover = [
-		output[0] * ((i % (output[0] * output[1]) / output[0]) % 1),
-		Math.floor(i % (output[0] * output[1]) / output[0]),
+	let inputOriginal = input;
+	let out = output;
+	let inp = input;
+	let adjustXY = [0, 0];
+	if(transpose) { // Analogous to inverting input <-> output with a few caveats
+		out = input;
+		inp = output;
+		input = [
+			input[0] - 2*padding[0],
+			input[1] - 2*padding[1],
+		];
+
+		[hoverInput, hoverOutput] = [hoverOutput, hoverInput];
+
+		adjustXY = [...padding];
+	}
+
+
+	let doHover = [ // doHover is [x,y] coordinates of the currently hovered cell (in the output grid)
+		out[0] * ((i % (out[0] * out[1]) / out[0]) % 1),
+		Math.floor(i % (out[0] * out[1]) / out[0]),
 	];
 	if(hoverOutput) {
 		doHover = hoverOutput;
 	} else if(hoverInput) {
 		doHover = [
-			Math.min(output[0]-1, Math.max(0, Math.floor((hoverInput[0] -  dilation[0] * Math.floor(kernel[0] / 2) + padding[0]) / stride[0]))),
-			Math.min(output[1]-1, Math.max(0, Math.floor((hoverInput[1] -  dilation[1] * Math.floor(kernel[1] / 2) + padding[1]) / stride[1]))),
+			Math.min(out[0]-1, Math.max(0, Math.round((hoverInput[0] + adjustXY[0] -  dilation[0] * Math.floor(kernel[0] / 2)) / stride[0]))),
+			Math.min(out[1]-1, Math.max(0, Math.round((hoverInput[1] + adjustXY[1] -  dilation[1] * Math.floor(kernel[1] / 2)) / stride[1]))),
 		]
 	}
 
@@ -111,23 +129,22 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 		for(let i=0;i<kernel[0];i++) {
 			for(let j=0;j<kernel[1];j++) {
 				out.push([
-					doHover[0] * stride[0] + i * dilation[0] + 0*padding[0],
-					doHover[1] * stride[1] + j * dilation[1] + 0*padding[1],
+					doHover[0] * stride[0] + i * dilation[0] - adjustXY[0],
+					doHover[1] * stride[1] + j * dilation[1] - adjustXY[1],
 				]);
 			}
 		}
 		return out;
 	}, [doHover]);
 	let highlightCellsOutput = useMemo(()=>{
-		let out = [[...doHover]];
-		return out;
+		return [[...doHover]];
 	}, [doHover]);
 
 	return <div id="visualizer">
-		<h2>Input ({input[0]}×{input[1]})</h2>
-		<Canvas {...{size: input, padding, highlightCells: highlightCellsInput}} onHover={setHoverInput} />
+		<h2>Input ({inputOriginal[0]}×{inputOriginal[1]})</h2>
+		<Canvas {...{size: input, padding, highlightCells: transpose?highlightCellsOutput:highlightCellsInput}} onHover={setHoverInput} />
 		<h2>Output ({output[0]}×{output[1]})</h2>
-		<Canvas {...{size: output, padding: outputPadding, highlightCells: highlightCellsOutput}} onHover={setHoverOuput} />
+		<Canvas {...{size: output, outputPadding, highlightCells: transpose?highlightCellsInput:highlightCellsOutput}} onHover={setHoverOutput} />
 	</div>
 };
 
