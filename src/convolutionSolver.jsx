@@ -150,7 +150,19 @@ const ConvolutionSolver = ()=>{
 	]);
 
 	let codes = {};
-	if(solution) {
+	if(transpose) {
+		if(linkXY) {
+			codes = {
+				'PyTorch'				: `nn.ConvTranspose2d(in_channels=${inChannels}, out_channels=${outChannels}, kernel_size=${kernel[0]}, stride=${stride[0]}, padding=${padding[0]}, output_padding=${outputPadding[0]}, dilation=${dilation[0]})`,
+				'Keras / TensorFlow'	: (padding[0]!=0?`keras.layers.ZeroPadding2D(padding=${padding[0]}),\n`:'')+`keras.layers.Conv2DTranspose(filters=${outChannels}, kernel_size=${kernel[0]}, strides=${stride[0]}, padding='valid', dilation_rate=${dilation[0]}, input_shape=(${input[0]}, ${input[1]}, ${inChannels}))`,
+			}
+		} else {
+			codes = {
+				'PyTorch'				: `nn.ConvTranspose2d(in_channels=${inChannels}, out_channels=${outChannels}, kernel_size=(${kernel.join(', ')}), stride=(${stride.join(', ')}), padding=(${padding.join(', ')}), output_padding=(${outputPadding.join(', ')}), dilation=(${dilation.join(', ')}))`,
+				'Keras / TensorFlow'	: (padding[0]!=0?`keras.layers.ZeroPadding2D(padding=(${padding.join(', ')})),\n`:'')+`keras.layers.Conv2DTranspose(filters=${outChannels}, kernel_size=(${kernel.join(', ')}), strides=(${stride.join(', ')}), padding='valid', dilation_rate=(${dilation.join(', ')}), input_shape=(${input[0]}, ${input[1]}, ${inChannels}))`,
+			}
+		}
+	} else {
 		if(linkXY) {
 			codes = {
 				'PyTorch'				: `nn.Conv2d(in_channels=${inChannels}, out_channels=${outChannels}, kernel_size=${kernel[0]}, stride=${stride[0]}, padding=${padding[0]}, dilation=${dilation[0]})`,
@@ -217,13 +229,13 @@ const ConvolutionSolver = ()=>{
 			</form-field>
 			{transpose && <form-field>
 				<label>Output Padding<Checkbox checked={outputPaddingSolve} onChange={(v,c)=>setOutputPaddingSolve(c)}>Solve for</Checkbox></label>
-				<SliderValue min={0} max={20} disabled={outputPaddingSolve} linkXY={linkXY} value={outputPadding} onChange={setOutputPadding} />
+				<SliderValue min={0} max={Math.max(dilation[0], stride[0], dilation[1], stride[1])-1} disabled={outputPaddingSolve} linkXY={linkXY} value={outputPadding} onChange={setOutputPadding} />
 			</form-field>}
 			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<>
 				<h2>😭 No solution given the constraints.</h2>
 				<h2>Current parameters give:<br />{input[0]}×{input[1]} → {realOutput[0]}×{realOutput[1]}</h2>
 			</>}
-			{solution?<div className="code-results">
+			<div className="code-results">
 				<h2>Code snippets</h2>
 				<div data-horizontal>
 					<form-field>
@@ -239,7 +251,7 @@ const ConvolutionSolver = ()=>{
 					<h3>{k}</h3>
 					<code>{v}</code>
 				</div>)}
-			</div>:undefined}
+			</div>
 		</form>
 		<ConvolutionViewer {...{input, kernel, padding, dilation, stride, transpose, outputPadding}} />
 	</>
