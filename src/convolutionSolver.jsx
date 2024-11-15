@@ -228,7 +228,7 @@ const ConvolutionSolver = ()=>{
 				<Toggle checked={transpose} disabled={transposeSolve} onChange={c=>setTranspose(c)}></Toggle>
 			</form-field>
 			{transpose && <form-field>
-				<label>Output Padding<Checkbox checked={outputPaddingSolve} onChange={(v,c)=>setOutputPaddingSolve(c)}>Solve for</Checkbox></label>
+				<label>Output Padding (PyTorch)<Checkbox checked={outputPaddingSolve} onChange={(v,c)=>setOutputPaddingSolve(c)}>Solve for</Checkbox></label>
 				<SliderValue min={0} max={Math.max(dilation[0], stride[0], dilation[1], stride[1])-1} disabled={outputPaddingSolve} linkXY={linkXY} value={outputPadding} onChange={setOutputPadding} />
 			</form-field>}
 			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<>
