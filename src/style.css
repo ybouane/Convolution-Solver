@@ -147,3 +147,10 @@ body.rs-theme-dark {
 		max-width: 100%;
 	}
 }
+
+@media screen and (max-width:800px) {
+	main {
+		display:flex;
+		flex-flow:column;
+	}
+}

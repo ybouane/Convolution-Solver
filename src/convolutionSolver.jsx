@@ -232,9 +232,9 @@ const ConvolutionSolver = ()=>{
 				<label>Output Padding (PyTorch)<Checkbox checked={outputPaddingSolve} onChange={(v,c)=>setOutputPaddingSolve(c)}>Solve for</Checkbox></label>
 				<SliderValue min={0} max={Math.max(dilation[0], stride[0], dilation[1], stride[1])-1} disabled={outputPaddingSolve} linkXY={linkXY} value={outputPadding} onChange={setOutputPadding} />
 			</form-field>}
-			{solution?<h2>{input[0]}×{input[1]} → {output[0]}×{output[1]}</h2>:<>
-				<h2>😭 No solution given the constraints.</h2>
-				<h2>Current parameters give:<br />{input[0]}×{input[1]} → {realOutput[0]}×{realOutput[1]}</h2>
+			{!solution && <>
+				<h3>😭 No solution given the constraints.</h3>
+				<h3>Current parameters give:<br />{input[0]}×{input[1]} → {realOutput[0]}×{realOutput[1]}</h3>
 			</>}
 		</form>
 		<ConvolutionViewer {...{input, kernel, padding, dilation, stride, transpose, outputPadding}} />
