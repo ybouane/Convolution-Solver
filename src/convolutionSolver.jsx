@@ -184,6 +184,7 @@ const ConvolutionSolver = ()=>{
 	]
 	return <>
 		<form>
+			<h2>Parameters</h2>
 			<form-field>
 				<Toggle checked={linkXY} onChange={c=>setLinkXY(c)}>Link X&Y</Toggle>
 			</form-field>
@@ -235,25 +236,25 @@ const ConvolutionSolver = ()=>{
 				<h2>😭 No solution given the constraints.</h2>
 				<h2>Current parameters give:<br />{input[0]}×{input[1]} → {realOutput[0]}×{realOutput[1]}</h2>
 			</>}
-			<div className="code-results">
-				<h2>Code snippets</h2>
-				<div data-horizontal>
-					<form-field>
-						<label>Input Channels</label>
-						<SliderValue min={1} max={512} linkXY={true} value={[inChannels, inChannels]} onChange={v=>setInChannels(v[0])} roundNumber={roundToPowerOf2} />
-					</form-field>
-					<form-field>
-						<label>Output Channels</label>
-						<SliderValue min={1} max={512} linkXY={true} value={[outChannels, outChannels]} onChange={v=>setOutChannels(v[0])} roundNumber={roundToPowerOf2} />
-					</form-field>
-				</div>
-				{Object.entries(codes).map(([k, v])=><div key={k}>
-					<h3>{k}</h3>
-					<code>{v}</code>
-				</div>)}
-			</div>
 		</form>
 		<ConvolutionViewer {...{input, kernel, padding, dilation, stride, transpose, outputPadding}} />
+		<div className="code-results">
+			<h2>Code snippets</h2>
+			<div data-horizontal>
+				<form-field>
+					<label>Input Channels</label>
+					<SliderValue min={1} max={512} linkXY={true} value={[inChannels, inChannels]} onChange={v=>setInChannels(v[0])} roundNumber={roundToPowerOf2} />
+				</form-field>
+				<form-field>
+					<label>Output Channels</label>
+					<SliderValue min={1} max={512} linkXY={true} value={[outChannels, outChannels]} onChange={v=>setOutChannels(v[0])} roundNumber={roundToPowerOf2} />
+				</form-field>
+			</div>
+			{Object.entries(codes).map(([k, v])=><div key={k}>
+				<h3>{k}</h3>
+				<code>{v}</code>
+			</div>)}
+		</div>
 	</>
 };
 

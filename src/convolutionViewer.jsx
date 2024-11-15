@@ -141,9 +141,10 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 	}, [doHover]);
 
 	return <div id="visualizer">
-		<h2>Input ({inputOriginal[0]}×{inputOriginal[1]})</h2>
+		<h2>Visualization</h2>
+		<h3>Input ({inputOriginal[0]}×{inputOriginal[1]})</h3>
 		<Canvas {...{size: input, padding, highlightCells: transpose?highlightCellsOutput:highlightCellsInput}} onHover={setHoverInput} />
-		<h2>Output ({output[0]}×{output[1]})</h2>
+		<h3>Output ({output[0]}×{output[1]})</h3>
 		<Canvas {...{size: output, outputPadding, highlightCells: transpose?highlightCellsInput:highlightCellsOutput}} onHover={setHoverOutput} />
 	</div>
 };
