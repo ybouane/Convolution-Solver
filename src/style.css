@@ -28,7 +28,50 @@ body {
 a {
 	color:inherit;
 }
-
+header {
+	text-align: center;
+	align-self: center;
+	h1 {
+		display:flex;
+		gap:10px;
+		img {
+			width:40px;
+		}
+	}
+	>strong {
+		cursor: pointer;
+		font-weight:600;
+		letter-spacing: 0.1em;
+		&:hover {
+			opacity:0.8;
+		}
+	}
+}
+article {
+	display: grid;
+	grid-template-rows: 0fr;
+	max-width: 1200px;
+	background-color: #00000044;
+	border-radius: 4px;
+	padding:8px 16px;
+	opacity:0;
+	transition:grid-template-rows 0.30s, opacity 0.30s;
+	&[data-show] {
+		grid-template-rows: 1fr;
+		opacity:1;
+	}
+	>div {
+		overflow:hidden;
+	}
+	h3 {
+		margin-top: 12px;
+		font-weight:600;
+	}
+	ul {
+		margin-left: 20px;
+		margin-bottom: 8px;
+	}
+}
 main {
 	flex: 1;
 	align-self: center;
@@ -39,7 +82,9 @@ main {
 	grid-template-columns: 320px 1fr;
 	gap:25px;
 }
-
+footer {
+	margin-top:20px;
+}
 h2 {
 	text-align: center;
 	font-size:1.7em;
@@ -153,4 +198,10 @@ body.rs-theme-dark {
 		display:flex;
 		flex-flow:column;
 	}
+}
+
+#github-button {
+    position: fixed;
+    top: 12px;
+    right: 12px;
 }
