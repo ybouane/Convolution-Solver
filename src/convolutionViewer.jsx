@@ -4,7 +4,7 @@ import {eq, eqTrans} from './helpers.js'
 const cellSizeMax = 30;
 //const cellSizeMin = 4;
 
-const Canvas = ({size, padding=[0, 0], outputPadding=[0, 0], highlightCells, onHover})=>{
+const Canvas = ({size, padding=[0, 0], outputPadding=[0, 0], highlightCells, onHover, overflowRef})=>{
 	let $canvas = useRef(null);
 	let ctx = useRef(null);
 	useEffect(()=>{
@@ -30,10 +30,13 @@ const Canvas = ({size, padding=[0, 0], outputPadding=[0, 0], highlightCells, onH
 			H *= H_/H;
 		}
 	}
+	let cellSize = Math.max(8, (W - 1) / wP); // 1px to account for cell borders
+	let overflow = [
+		(wP * cellSize + 1) / W,
+		(hP * cellSize + 1) / H,
+	];
+	overflowRef.current = overflow[0]>1 || overflow[1]>1;
 	useEffect(()=>{
-
-		let cellSize = (W - 1) / wP; // 1px to account for cell borders
-		
 		$canvas.current.width = W;
 		$canvas.current.height = H;
 
@@ -82,8 +85,8 @@ const Canvas = ({size, padding=[0, 0], outputPadding=[0, 0], highlightCells, onH
 
 	}, [...size, ...padding, highlightCells]);
 	return <canvas ref={$canvas} onMouseMove={(e)=>{
-		let x = Math.min(wP-1, Math.floor(wP * e.nativeEvent.offsetX / $canvas.current.clientWidth));
-		let y = Math.min(hP-1, Math.floor(hP * e.nativeEvent.offsetY / $canvas.current.clientHeight));
+		let x = Math.min(wP-1, Math.floor(wP / overflow[0] * e.nativeEvent.offsetX / $canvas.current.clientWidth));
+		let y = Math.min(hP-1, Math.floor(hP / overflow[1] * e.nativeEvent.offsetY / $canvas.current.clientHeight));
 		onHover && onHover([x, y]);
 	}} onMouseLeave={()=>{
 		onHover && onHover(false);
@@ -113,6 +116,9 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 
 	let [hoverInput, setHoverInput] = useState(false);
 	let [hoverOutput, setHoverOutput] = useState(false);
+
+	let overflowInput = useRef(false);
+	let overflowOutput = useRef(false);
 
 	let inputOriginal = input;
 	let out = output;
@@ -163,10 +169,10 @@ const ConvolutionViewer = ({input, kernel, padding, dilation, stride, transpose,
 
 	return <div id="visualizer">
 		<h2>Visualization</h2>
-		<h3>Input ({inputOriginal[0]}×{inputOriginal[1]})</h3>
-		<Canvas {...{size: input, padding, highlightCells: transpose?highlightCellsOutput:highlightCellsInput}} onHover={setHoverInput} />
-		<h3>Output ({output[0]}×{output[1]})</h3>
-		<Canvas {...{size: output, outputPadding, highlightCells: transpose?highlightCellsInput:highlightCellsOutput}} onHover={setHoverOutput} />
+		<h3>Input ({inputOriginal[0]}×{inputOriginal[1]}){overflowInput.current && ' (cropped)'}</h3>
+		<Canvas {...{size: input, padding, highlightCells: transpose?highlightCellsOutput:highlightCellsInput}} onHover={setHoverInput} overflowRef={overflowInput} />
+		<h3>Output ({output[0]}×{output[1]}){overflowOutput.current && ' (cropped)'}</h3>
+		<Canvas {...{size: output, outputPadding, highlightCells: transpose?highlightCellsInput:highlightCellsOutput}} onHover={setHoverOutput} overflowRef={overflowOutput} />
 	</div>
 };
 
