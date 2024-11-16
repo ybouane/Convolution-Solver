@@ -8,29 +8,29 @@ import ConvolutionViewer from './convolutionViewer.jsx';
 
 const ConvolutionSolver = ()=>{
 	
-	let [linkXY, setLinkXY] = useState(true);
-	let [input, setInput] = useState([16, 16]);
-	let [output, setOutput] = useState([8, 8]);
+	let [linkXY, setLinkXY_] = useState(true);
+	let [input, setInput_] = useState([16, 16]);
+	let [output, setOutput_] = useState([8, 8]);
 
-	let [kernel, setKernel] = useState([3, 3]);
-	let [kernelSolve, setKernelSolve] = useState(false);
+	let [kernel, setKernel_] = useState([3, 3]);
+	let [kernelSolve, setKernelSolve_] = useState(false);
 	
-	let [padding, setPadding] = useState([1, 1]);
-	let [paddingSolve, setPaddingSolve] = useState(true);
+	let [padding, setPadding_] = useState([1, 1]);
+	let [paddingSolve, setPaddingSolve_] = useState(true);
 	
-	let [dilation, setDilation] = useState([1, 1]);
-	let [dilationSolve, setDilationSolve] = useState(true);
+	let [dilation, setDilation_] = useState([1, 1]);
+	let [dilationSolve, setDilationSolve_] = useState(true);
 	
-	let [stride, setStride] = useState([2, 2]);
-	let [strideSolve, setStrideSolve] = useState(true);
+	let [stride, setStride_] = useState([2, 2]);
+	let [strideSolve, setStrideSolve_] = useState(true);
 	
-	let [transpose, setTranspose] = useState(false);
-	let [transposeSolve, setTransposeSolve] = useState(true);
+	let [transpose, setTranspose_] = useState(false);
+	let [transposeSolve, setTransposeSolve_] = useState(true);
 	
-	let [outputPadding, setOutputPadding] = useState([0, 0]);
-	let [outputPaddingSolve, setOutputPaddingSolve] = useState(true);
+	let [outputPadding, setOutputPadding_] = useState([0, 0]);
+	let [outputPaddingSolve, setOutputPaddingSolve_] = useState(true);
 	
-	let [forceCustom, setForceCustom] = useState(false);
+	let [forceCustom, setForceCustom_] = useState(false);
 
 	let [solution, setSolution] = useState([output[0], output[1]]);
 
@@ -38,6 +38,23 @@ const ConvolutionSolver = ()=>{
 	let [outChannels, setOutChannels] = useState(32);
 
 	let internalChange = useRef(false);
+	const setLinkXY				= (v, isInternal=false)=>{internalChange.current=isInternal;setLinkXY_(v)};
+	const setInput				= (v, isInternal=false)=>{internalChange.current=isInternal;setInput_(v)};
+	const setOutput				= (v, isInternal=false)=>{internalChange.current=isInternal;setOutput_(v)};
+	const setKernel				= (v, isInternal=false)=>{internalChange.current=isInternal;setKernel_(v)};
+	const setKernelSolve		= (v, isInternal=false)=>{internalChange.current=isInternal;setKernelSolve_(v)};
+	const setPadding			= (v, isInternal=false)=>{internalChange.current=isInternal;setPadding_(v)};
+	const setPaddingSolve		= (v, isInternal=false)=>{internalChange.current=isInternal;setPaddingSolve_(v)};
+	const setDilation			= (v, isInternal=false)=>{internalChange.current=isInternal;setDilation_(v)};
+	const setDilationSolve		= (v, isInternal=false)=>{internalChange.current=isInternal;setDilationSolve_(v)};
+	const setStride				= (v, isInternal=false)=>{internalChange.current=isInternal;setStride_(v)};
+	const setStrideSolve		= (v, isInternal=false)=>{internalChange.current=isInternal;setStrideSolve_(v)};
+	const setTranspose			= (v, isInternal=false)=>{internalChange.current=isInternal;setTranspose_(v)};
+	const setTransposeSolve		= (v, isInternal=false)=>{internalChange.current=isInternal;setTransposeSolve_(v)};
+	const setOutputPadding		= (v, isInternal=false)=>{internalChange.current=isInternal;setOutputPadding_(v)};
+	const setOutputPaddingSolve	= (v, isInternal=false)=>{internalChange.current=isInternal;setOutputPaddingSolve_(v)};
+	const setForceCustom		= (v, isInternal=false)=>{internalChange.current=isInternal;setForceCustom_(v)};
+
 	let solveCounter = useRef(0);
 	useEffect(()=>{
 		if(linkXY) { // force same values
@@ -54,12 +71,9 @@ const ConvolutionSolver = ()=>{
 	
 
 	useEffect(()=>{
-		if(internalChange.current) {
-			internalChange.current = false;
+		if(internalChange.current)
 			return;
-		}
 		let timer = setTimeout(async () => {
-			internalChange.current = true;
 			solveCounter.current++;
 			let count = solveCounter.current;
 			let possibleValues = [
@@ -88,18 +102,18 @@ const ConvolutionSolver = ()=>{
 				return;
 
 			let solutionY = solutionX;
-			
+
 			if(linkXY) {
 				if(solutionX) {
 					let [i, o, k, p, d, s, po] = solutionX;
-					setSolution(true);//[solutionX, solutionX]);
-					setKernel([k ,k]);
-					setPadding([p, p]);
-					setDilation([d, d]);
-					setStride([s, s]);
-					setTranspose(transpose);
+					setSolution(true);
+					setKernel([k ,k], true);
+					setPadding([p, p], true);
+					setDilation([d, d], true);
+					setStride([s, s], true);
+					setTranspose(transpose, true);
 					if(transpose)
-						setOutputPadding([po, po]);
+						setOutputPadding([po, po], true);
 				} else {
 					setSolution(false);
 				}
@@ -129,13 +143,13 @@ const ConvolutionSolver = ()=>{
 					setSolution(true);//[solutionX, solutionY]);
 					let [i, o, k, p, d, s, po] = solutionX;
 					let [i_, o_, k_, p_, d_, s_, po_] = solutionY;
-					setKernel([k ,k_]);
-					setPadding([p, p_]);
-					setDilation([d, d_]);
-					setStride([s, s_]);
-					setTranspose(transpose);
+					setKernel([k ,k_], true);
+					setPadding([p, p_], true);
+					setDilation([d, d_], true);
+					setStride([s, s_], true);
+					setTranspose(transpose, true);
 					if(transpose)
-						setOutputPadding([po, po_]);
+						setOutputPadding([po, po_], true);
 				} else {
 					setSolution(false);
 				}
