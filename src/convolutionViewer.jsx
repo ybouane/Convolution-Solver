@@ -39,26 +39,47 @@ const Canvas = ({size, padding=[0, 0], outputPadding=[0, 0], highlightCells, onH
 
 		ctx.current.strokeStyle = '#111111';
 		ctx.current.lineWidth = 1;
-		// Number of cells
+		// BG
+		ctx.current.fillStyle = '#c9cccd';
+		ctx.current.fillRect(0, 0, W, H);
+
+		// Padding
+		ctx.current.fillStyle = '#1b2327';
+		ctx.current.fillRect(0, 0, W, cellSize * padding[1]);// Top
+		ctx.current.fillRect(0, 0, cellSize * padding[0], H);// Left
+		ctx.current.fillRect(0, cellSize * (h - outputPadding[1] + padding[1]), W, cellSize * (outputPadding[1] + padding[1]));// Bottom
+		ctx.current.fillRect(cellSize * (w - outputPadding[0] + padding[0]), 0, cellSize * (outputPadding[0] + padding[0]), H);// Right
+
+
+		// highlighted cells
+		for(let [i, j] of highlightCells) {
+			let isPadding = j<padding[0] || j>=(w - outputPadding[0] + padding[0]) || i<padding[1] || i>=(h - outputPadding[1]  + padding[1]);
+			if(isPadding)
+				ctx.current.fillStyle = '#2b5d7e';
+			else
+				ctx.current.fillStyle = '#8cbcdb';
 	
-		// Draw grid
-		for (let i = 0; i < hP; i++) {
-			for (let j = 0; j < wP; j++) {
-				let isPadding = j<padding[0] || j>=(w - outputPadding[0] + padding[0]) || i<padding[1] || i>=(h - outputPadding[1]  + padding[1]);
-				let isHighlighted = highlightCells.find(c=>c[0]==j && c[1]==i);
-				if(isPadding)
-					ctx.current.fillStyle = isHighlighted?'#2b5d7e':'#1b2327';
-				else
-					ctx.current.fillStyle = isHighlighted?'#8cbcdb':'#c9cccd';
-
-
-				const x = j * cellSize;
-				const y = i * cellSize;
-				// Draw cell border
-				ctx.current.fillRect(x, y, cellSize+1, cellSize+1);
-				ctx.current.strokeRect(x+0.5, y+0.5, cellSize+1-0.5, cellSize+1-0.5);
-			}
+			const x = i * cellSize;
+			const y = j * cellSize;
+			// Draw cell border
+			ctx.current.fillRect(x, y, cellSize+1, cellSize+1);
 		}
+
+		// Grid
+		ctx.current.beginPath();
+		ctx.current.moveTo(0, H-0.5);
+		ctx.current.lineTo(W-0.5, H-0.5);
+		ctx.current.lineTo(W-0.5, 0.5);
+		for (let i = 0; i < hP; i++) { // Rows
+			ctx.current.moveTo(0, i * cellSize + 0.5);
+			ctx.current.lineTo(W+1, i * cellSize + 0.5);
+		}
+		for (let j = 0; j < wP; j++) { // Columns
+			ctx.current.moveTo(j * cellSize + 0.5, 0);
+			ctx.current.lineTo(j * cellSize + 0.5, H+1);
+		}
+		ctx.current.stroke();
+
 	}, [...size, ...padding, highlightCells]);
 	return <canvas ref={$canvas} onMouseMove={(e)=>{
 		let x = Math.min(wP-1, Math.floor(wP * e.nativeEvent.offsetX / $canvas.current.clientWidth));
